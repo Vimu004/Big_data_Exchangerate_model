@@ -3,9 +3,9 @@ from pyspark.sql.functions import to_date, unix_timestamp, col, concat_ws, lit
 from openai import AzureOpenAI
 import pandas as pd
 
-AZURE_OPENAI_API_KEY = "AFlouhwXnpCgj3Rmso284VxT2HeEP7VpFwVII1jJWEDwG1P1RZpBJQQJ99BBACHYHv6XJ3w3AAABACOGHjkK"
-AZURE_OPENAI_DEPLOYMENT_ID = "gpt-4o"
-AZURE_ENDPOINT = "https://dplnew.openai.azure.com/"
+AZURE_OPENAI_API_KEY = "###"
+AZURE_OPENAI_DEPLOYMENT_ID = "###"
+AZURE_ENDPOINT = "###"
 
 client = AzureOpenAI(
     api_key=AZURE_OPENAI_API_KEY,
