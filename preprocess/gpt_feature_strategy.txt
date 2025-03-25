@@ -1,0 +1,146 @@
+### Task 1: **Identify Important Features for Predicting Exchange Rates**
+Here are the critical features from each dataset that are likely to influence exchange rates:
+
+#### **1. EXCHANGE_RATES_SL**
+- **DATE**: Essential for time-series alignment (time-dependent behavior).
+- **USD, RUB, INR, GBP, EUR, CNY, AUD**: Daily exchange rate values. These are the targets to be predicted (or used for multi-target prediction). If forecasting one currency, the other exchange rates might be important as predictors.
+
+#### **2. SL_ECONOMIC_DATA**
+- **SRI_LANKA_GDP_USD_BILLIONS_USD**: GDP captures the overall economic health and impacts currency valuations.
+- **MERCHANDISE_IMPORTS_MILLIONS_USD**: Import dependency dynamics can influence currency.
+- **MERCHANDISE_EXPORTS_MILLIONS_USD**: Export performance strengthens currency value due to higher inflows.
+- **FOREIGN_INVESTMENTS_BILLIONS_USD**: Foreign investments contribute to foreign exchange reserves and currency stability.
+- **INFLATION_RATE_PCR**: Inflation affects purchasing power parity, directly impacting exchange rates.
+- **ANNUAL_CHANGE_PCR**: Economic changes may influence perception of currency strength.
+- **GDP_GROWTH_PCT**: Higher GDP growth tends to correlate positively with currency value.
+- **GDP_PER_CAPITA_USD**: Reflects economic prosperity, potentially impacting exchange rates.
+- **DATE**: Critical to match datasets temporally. Some features span monthly or yearly, so interpolation may be required.
+
+#### **3. TOURISM_SL**
+- **TOURISM_SL**: Tourism-driven foreign currency inflows (e.g., USD, EUR conversion) can influence exchange rates for Sri Lanka, especially for USD, EUR, and GBP.
+- **DATE**: To merge and align the features with daily-level datasets.
+
+---
+
+### Task 2: **Aligning and Merging Tables into a Daily-Level Super Dataset**
+To create a unified dataset at a daily granularity, follow these steps:
+
+#### **Step 1: Normalize Date Formats**
+- Ensure each dataset's `DATE` column is in a consistent format (e.g., `YYYY-MM-DD`).
+- Convert monthly/yearly datasets to daily frequency for exchange rate predictions.
+
+#### **Step 2: Resample ECONOMIC_DATA to Daily Frequency**
+- Yearly economic data (e.g., GDP, foreign investments) can be interpolated linearly or with spline interpolation to fill gaps at the daily level.
+- For monthly features (like merchandise imports), repeat values for all days within the month or interpolate smoothly.
+
+#### **Step 3: Resample TOURISM_SL Data**
+- Monthly tourism data can also be interpolated. Alternatively, repeat monthly values for all days within the corresponding month.
+
+#### **Step 4: Merge All Tables**
+- Use an outer join or full join based on the `DATE` feature:
+  ```python
+  merged_df = exchange_rates_sl.merge(economic_data_daily, on='DATE', how='outer') \
+                               .merge(tourism_sl_daily, on='DATE', how='outer')
+  ```
+- Fill missing data strategically (explained in preprocessing below).
+
+---
+
+### Task 3: **Preprocessing and Feature Engineering Pipeline**
+Creating a robust pipeline ensures data consistency and model readiness:
+
+#### **1. Handle Missing Data**
+- **Economic Features**: Use forward-fill, backward-fill, or interpolation methods for missing values.
+- **Exchange Rates**: For gaps in rates, forward-fill values (assuming continuity between days).
+- **Tourism Data**: If interpolating monthly data to daily, use linear or cubic interpolation.
+
+#### **2. Add Temporal Features**
+- Derive new time-based columns:
+  - **Day of Week** (e.g., Monday–Sunday): Exchange rates might behave differently on weekends.
+  - **Month**: Seasonal trends (e.g., tourism peaks or economic shifts) may affect exchange rates.
+  - **Quarter**: Captures broader trends in economy and currency fluctuations.
+  
+#### **3. Lagged Features (Time-Series Engineering)**
+- Create lagged features from exchange rates (e.g., previous day, 7-days ago, etc.):
+  - `USD_lag1`, `RUB_lag7`, `GBP_ma30` (3-day, 7-day, and monthly moving averages).
+  - Rolling statistics such as trends, volatility (e.g., standard deviation over a window).
+  
+#### **4. Ratio Features (Economic Ratios)**
+- Derived features such as:
+  - **Exports-to-Imports Ratio**: Captures trade balance trends.
+  - **GDP Growth to Inflation Rate**: Measures currency dynamics relative to domestic economy health.
+  - **Tourism Impact**: Tourism value divided by GDP or total exports.
+
+#### **5. Scaling and Normalization**
+- Scale numeric features:
+  - Z-score normalization (standardization) for stationary time-series data.
+  - Min-Max scaling for non-stationary features like exchange rates.
+
+#### **6. One-Hot Encoding for Categorical Data**
+- Encode time columns (e.g., month, quarter) as categorical if cyclic patterns exist.
+
+#### **7. Feature Selection**
+- Use Pearson correlation and mutual information to remove redundant or non-informative features.
+
+---
+
+### Task 4: **Suggested Modeling Approaches**
+
+#### **Approach 1: Time-Series Models**
+Suitable for sequential dependency in daily data:
+1. **ARIMA (Autoregressive Integrated Moving Average)**:
+   - Effective for single-variable forecasting with seasonal adjustments.
+   - Use SARIMA for seasonality corrections if needed.
+
+2. **VAR (Vector Autoregression)**:
+   - Multivariate time-series model for influencing currencies (predicting multiple exchange rates simultaneously).
+
+3. **Prophet (Facebook)**:
+   - User-friendly library for time-series forecasting.
+   - Handles holidays, seasonality, and trend decomposition.
+
+4. **LSTM (Long Short-Term Memory)**:
+   - Deep learning-based time-series model for non-linear trends and long-term dependencies.
+   - Input lagged features (sliding window of exchange rates) and economic data.
+
+#### **Approach 2: Machine Learning Models**
+If non-time-series approaches are preferred, build regression models:
+1. **Gradient Boosting Models (XGBoost, LightGBM, CatBoost)**:
+   - Handles missing data and is ideal for complex feature interactions.
+   - Use lagged features and derived ratios as explanatory variables.
+
+2. **Random Forest**:
+   - Robust for structured data and reduces risk of overfitting with many features.
+
+#### **Approach 3: Hybrid Modeling**
+Combine time-series and ML-based models:
+- **Use Time-Series for Predictions**:
+  - Predict future trends using SARIMA or LSTM.
+- **Machine Learning for Corrections**:
+  - Use gradient boosting or ensemble models to predict residual errors.
+
+---
+
+### Apache Spark or Alternatives
+
+#### **Why Apache Spark?**
+- Spark is well-suited for handling large datasets (`EXCHANGE_RATES_SL`, `SL_ECONOMIC_DATA`, etc.).
+- Use PySpark for distributed computation on these large tables during merging/interpolation.
+
+#### **Steps with Spark**:
+1. **Load Datasets into Spark DataFrames**:
+   - `spark.read.format("snowflake").options(...)`
+   - Perform joins and transformations efficiently on distributed clusters.
+
+2. **Preprocessing with Spark SQL or PySpark**:
+   - Handle nulls and interpolate using Spark SQL functions (`fillna`, `approxQuantile`).
+
+3. **Model Training**:
+   - Use MLlib for gradient boosting, LSTMs, or time-series models.
+
+#### **Alternatives to Spark**:
+- **Pandas/Dask**: If data is manageable locally (up to a few GBs), Pandas/Dask will be faster.
+- **MLflow**: Use MLflow with PySpark or Dask for model tracking and pipeline management.
+
+--- 
+Let me know if you want an **implementation workflow** or code snippets for any part!
