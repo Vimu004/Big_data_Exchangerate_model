@@ -5,3 +5,5 @@ scikit-learn
 pyspark 
 snowflake-connector-python
 openai
+xgboost
+numpy

@@ -1,3 +1,5 @@
+#creation of the data mart
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from save_to_snowflake import save_dataframe_to_snowflake

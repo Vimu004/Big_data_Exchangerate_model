@@ -1,3 +1,4 @@
+# Saving the generated data mart to the Database (DW schema)
 from pyspark.sql import DataFrame
 
 def save_dataframe_to_snowflake(
@@ -10,7 +11,7 @@ def save_dataframe_to_snowflake(
     sf_schema: str,
     sf_warehouse: str,
     sf_role: str = "ACCOUNTADMIN",
-    mode: str = "overwrite"  # or "append"
+    mode: str = "overwrite"  
 ):
     """
     Save a Spark DataFrame to a Snowflake table.

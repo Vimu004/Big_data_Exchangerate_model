@@ -1,3 +1,5 @@
+#Insight about the data from an AI 
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import to_date, unix_timestamp, col, concat_ws, lit
 from openai import AzureOpenAI
