@@ -83,8 +83,8 @@ Please respond in detailed bullet points.
 if __name__ == "__main__":
     spark = get_spark_session()
 
-    sf_user = "VIMUTHU04"
-    sf_password = "Vimuthu20042007"
+    sf_user = "####"
+    sf_password = "#####"
 
     print("🔄 Loading tables from Snowflake...")
     exchange_rates_df = load_table_from_snowflake(spark, "EXCHANGE_RATES_SL", sf_user, sf_password)

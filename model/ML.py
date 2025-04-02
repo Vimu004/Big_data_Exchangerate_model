@@ -9,9 +9,9 @@ from xgboost import XGBRegressor
 
 def load_prediction_data():
     conn = snowflake.connector.connect(
-        user="VIMUTHU04",
-        password="Vimuthu20042007",
-        account="dlbgnxt-iu64182",
+        user="###",
+        password="###",
+        account="###",
         warehouse="COMPUTE_WH",
         database="EXCHANGE_RATES_SL",
         schema="DW"
